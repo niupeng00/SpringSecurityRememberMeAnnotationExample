@@ -1,0 +1,156 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-5.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <title>添加IP界面</title>
+    <link rel="stylesheet" th:href="@{/static/layui/css/layui.css}" media="all">
+    <link rel="stylesheet" th:href="@{/static/layui/css/style/admin.css}" media="all">
+</head>
+<body>
+
+<!--<div class="layui-fluid">-->
+<div class="layui-card" style="margin-top: 35px">
+    <div class="layui-card-body">
+        <form class="layui-form" action="" lay-filter="component-form-group" style="margin-top: 20px">
+            <div class="layui-form-item">
+                <div class="layui-inline" style="margin-left: -50px">
+                    <label class="layui-form-label">名稱</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="serverName" lay-verify="title" autocomplete="off" placeholder="服務器名稱" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline" style="margin-left: -70px">
+                    <label class="layui-form-label">方式</label>
+                    <div class="layui-input-inline">
+                        <select name="link" lay-verify="required" lay-search="" style="width: 80px">
+                            <option value="">选择或搜索选择</option>
+                            <option value="1">遠程桌面</option>
+                            <option value="2">TeamViewer</option>
+                            <option value="3">向日葵</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline" style="margin-left: -50px">
+                    <label class="layui-form-label">IP地質</label>
+                    <div class="layui-input-inline">
+                        <input style="width: 130px" type="text" name="ip" lay-verify="required" autocomplete="off" placeholder="IP" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline" style="margin-left: -130px">
+                    <label class="layui-form-label">端口</label>
+                    <div class="layui-input-inline">
+                        <input style="width: 80px" type="text" name="port" lay-verify="required" autocomplete="off" placeholder="端口" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline" style="margin-left: -170px">
+                    <label class="layui-form-label">用戶名</label>
+                    <div class="layui-input-inline">
+                        <input style="width: 130px" type="text" name="username" lay-verify="required" autocomplete="off" placeholder="用戶名" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline" style="margin-left: -130px">
+                    <label class="layui-form-label">密碼</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="password" lay-verify="required" autocomplete="off" placeholder="密碼" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline" style="margin-left: 20px">
+                    <button class="layui-btn" lay-submit="" lay-filter="component-form-demo1">提交</button>
+                </div>
+                <meta name="_csrf" th:content="${_csrf.token}"/>
+                <meta name="_csrf_header"  th:content="${_csrf.headerName}"/>
+            </div>
+        </form>
+    </div>
+</div>
+<!--</div>-->
+
+
+<script th:src="@{/static/layui/layui.js}"></script>
+<script>
+    layui.config({
+        base: '../static/layui/lay/' //静态资源所在路径
+    }).extend({
+        index: 'admin/index' //主入口模块
+    }).use(['index', 'form', 'laydate'], function(){
+        var $ = layui.$
+            ,admin = layui.admin
+            ,element = layui.element
+            ,layer = layui.layer
+            ,laydate = layui.laydate
+            ,form = layui.form
+            ,index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+
+        form.render(null, 'component-form-group');
+
+        laydate.render({
+            elem: '#LAY-component-form-group-date'
+        });
+
+        /* 自定义验证规则 */
+        form.verify({
+            title: function(value){
+                if(value.length < 3){
+                    return '标题至少得3个字符啊';
+                }
+            }
+            ,pass: [/(.+){6,12}$/, '密码必须6到12位']
+            ,content: function(value){
+                layedit.sync(editIndex);
+            }
+        });
+
+        /* 监听指定开关 */
+        form.on('switch(component-form-switchTest)', function(data){
+            layer.msg('开关checked：'+ (this.checked ? 'true' : 'false'), {
+                offset: '6px'
+            });
+            layer.tips('温馨提示：请注意开关状态的文字可以随意定义，而不仅仅是ON|OFF', data.othis)
+        });
+
+        /* 监听提交 */
+        form.on('submit(component-form-demo1)', function(data){
+            data = data.field;
+            var header = $("meta[name='_csrf_header']").attr("content");
+            var token =$("meta[name='_csrf']").attr("content");
+            $.ajax({
+                type: "POST",
+                url: "addSupervision",
+                data: data,
+                beforeSend : function(XMLHttpRequest) {
+                    XMLHttpRequest.setRequestHeader(header, token);
+                },
+                success : function(data) {
+                    //ajax返回
+                    //认证完成
+
+                    if (data.status == "200") {
+                        layer.msg("保存成功", {icon:6,time:1000,shade:0.4},function() {
+                            parent.layer.close(index);
+                        });
+                    } else if (data.status != 200) {
+                        layer.msg("保存失敗", {icon: 5})
+                    }
+
+                },
+                error : function(XMLHttpRequest, ajaxOptions, throwError) {
+
+                }
+            });
+            return false;
+
+            parent.layer.alert(JSON.stringify(data.field), {
+                title: '最终的提交信息'
+            })
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

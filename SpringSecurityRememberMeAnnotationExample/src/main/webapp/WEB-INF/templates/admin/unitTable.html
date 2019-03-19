@@ -1,0 +1,163 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-5.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <title>IP管理頁面</title>
+    <link rel="stylesheet" th:href="@{/static/layui/css/layui.css}" media="all">
+    <link rel="stylesheet" th:href="@{/static/layui/css/style/admin.css}" media="all">
+</head>
+<body>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">服务器名称</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="serverName" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">链接方式</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="link" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">邮箱</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="email" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">角色</label>
+                    <div class="layui-input-block">
+                        <select name="role">
+                            <option value="0">管理员</option>
+                            <option value="1">超级管理员</option>
+                            <option value="2">纠错员</option>
+                            <option value="3">采购员</option>
+                            <option value="4">推销员</option>
+                            <option value="5">运营人员</option>
+                            <option value="6">编辑</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn layuiadmin-btn-admin" lay-submit lay-filter="LAY-user-back-search">
+                        <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <div class="layui-btn-container">
+                <!--<button class="layui-btn layui-btn-sm" data-type="batchdel">删除</button>-->
+                <button class="layui-btn layui-btn-sm" data-type="add">添加IP</button>
+            </div>
+            <script type="text/html" id="test-table-toolbar-toolbarDemo">
+
+            </script>
+
+            <table id="LAY-user-back-manage" lay-filter="LAY-user-back-manage"></table>
+            <script type="text/html" id="titleLink">
+                {{#  if(d.link == '1'){ }}
+                遠程桌面
+                {{#  } else if(d.link == '2'){ }}
+                TeamViewer
+                {{#  } else if(d.link == '3'){ }}
+                向日葵
+                {{#  } }}
+            </script>
+            <script type="text/html" id="table-useradmin-admin">
+                <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+            </script>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/static/layui/layui.js}"></script>
+<script>
+    layui.config({
+        base: '../static/layui/lay/' //静态资源所在路径
+    }).extend({
+        index: 'admin/index' //主入口模块
+    }).use(['index', 'unitadmin', 'table'], function(){
+        var $ = layui.$
+            ,form = layui.form
+            ,table = layui.table;
+
+        //监听搜索
+        form.on('submit(LAY-user-back-search)', function(data){
+            var field = data.field;
+
+            //执行重载
+            table.reload('LAY-user-back-manage', {
+                where: field
+            });
+        });
+
+        //事件
+        var active = {
+            batchdel: function(){
+                var checkStatus = table.checkStatus('LAY-user-back-manage')
+                    ,checkData = checkStatus.data; //得到选中的数据
+
+                if(checkData.length === 0){
+                    return layer.msg('请选择数据');
+                }
+
+                layer.prompt({
+                    formType: 1
+                    ,title: '敏感操作，请验证口令'
+                }, function(value, index){
+                    layer.close(index);
+
+                    layer.confirm('确定删除吗？', function(index) {
+
+                        //执行 Ajax 后重载
+                        /*
+                        admin.req({
+                          url: 'xxx'
+                          //,……
+                        });
+                        */
+                        table.reload('LAY-user-back-manage');
+                        layer.msg('已删除');
+                    });
+                });
+            }
+            ,add: function(){
+                layer.open({
+                    type: 2, //因为layer弹出层需要一个页面，所以是iframe弹出层，因此type: 2。
+                    //title: "设置投保人",
+                    shadeClose: true,
+                    title: false,
+                    closeBtn: 0,
+                    area: ['90%', '20%'],
+                    skin: 'yourclass',
+                    shade: 0.4, //遮罩透明度
+                    moveType: 1, //拖拽风格，0是默认，1是传统拖动
+                    shift: 1, //0-6的动画形式，-1不开启
+                    content: "unitGroup",
+                });
+            }
+        }
+        $('.layui-btn.layui-btn-sm').on('click', function(){
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+</script>
+</body>
+</html>
+
